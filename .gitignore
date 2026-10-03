@@ -1,0 +1,17 @@
+# Data (not redistributable)
+data/*
+!data/README.md
+!data/dv/
+temporary/
+*.dta
+*.zip
+
+# Stata output / temp files
+*.log
+*.smcl
+*.gph
+*.stswp
+fig_table/
+
+# OS
+.DS_Store
