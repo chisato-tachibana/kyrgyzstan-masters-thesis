@@ -1,54 +1,29 @@
-# Does Domestic Violence Law Shift Gender Attitudes and Female Labor Force Participation in Kyrgyzstan?
+# Domestic Violence Law, Gender Attitudes, and Female Labor Force Participation in Kyrgyzstan
 
-**Chisato Tachibana** (The University of Tokyo, Graduate School of Economics)
-Master's thesis — replication code
+Code for my master's thesis at the Graduate School of Economics, University of Tokyo.
 
-📄 **Paper:** [paper/Tachibana_DV_Law_Kyrgyzstan.pdf](paper/Tachibana_DV_Law_Kyrgyzstan.pdf)
+Paper: [paper/Tachibana_DV_Law_Kyrgyzstan.pdf](paper/Tachibana_DV_Law_Kyrgyzstan.pdf)
 
-## Abstract
-
-This paper examines whether legal reforms aimed at protecting women can
-translate into substantive economic empowerment in contexts characterized by
-strong patriarchal norms. Using Kyrgyzstan's 2017 Domestic Violence Law and an
-intensity-based **triple-differences design** that exploits regional variation
-in pre-reform domestic violence prevalence, I find that the law led to
-significant improvements in attitudes toward women's work and increased
-women's bargaining power within households, particularly in initially
-conservative regions. However, I find no increase in female labor force
-participation, highlighting a gap between changing norms and observable
-economic behavior.
+The thesis looks at whether Kyrgyzstan's 2017 Domestic Violence Law changed gender attitudes, women's decision-making in the household, and female labor force participation. I use a triple-difference design that compares women and men across oblasts with different levels of reported domestic violence before the reform, using the Life in Kyrgyzstan panel (2013, 2016, 2019).
 
 ## Data
 
-- **Life in Kyrgyzstan (LiK) Study**, individual panel, waves 2013, 2016, and 2019.
-  The data are not redistributable. They can be obtained from the
-  [IZA International Data Service Center](https://datasets.iza.org/dataset/124/life-in-kyrgyzstan-study-2010-2019).
-  See [data/README.md](data/README.md) for where to place the files. Use the
-  files as distributed; the code handles all cleaning.
-- **Domestic violence statistics**: oblast-level counts of female DV victims and
-  population from the National Statistical Committee of the Kyrgyz Republic.
-  These are public and included in [data/dv/](data/dv/).
+The Life in Kyrgyzstan (LiK) data cannot be shared here. They are available from the IZA International Data Service Center:
+https://datasets.iza.org/dataset/124/life-in-kyrgyzstan-study-2010-2019
 
-## How to replicate
+See `data/README.md` for where to put the files.
 
-1. Place the LiK data in `data/` as described in [data/README.md](data/README.md).
-2. Install the user-written packages: `ssc install reghdfe`, `ssc install ftools`,
-   `ssc install estout`, `ssc install boottest` (`wildboot` is built into Stata 18).
-3. Set `global root` in `code/00_master.do` to the repository folder and run it.
+The oblast-level domestic violence and population figures (National Statistical Committee of the Kyrgyz Republic) are public and are in `data/dv/`.
 
-Tables are written to `fig_table/` and printed in the log. The full run takes
-a few minutes (wild cluster bootstrap with 9,999 replications).
+## Running the code
 
-Software: Stata 18 SE.
+The code is written in Stata 18. It needs `reghdfe`, `ftools`, `estout`, and `boottest` from SSC.
 
-## Code
+Set `global root` at the top of `code/00_master.do` and run that file. It runs everything below in order and writes the tables to `fig_table/`. The whole thing takes a few minutes.
 
-| File | Description | Paper output |
-|---|---|---|
-| `code/00_master.do` | Sets paths and runs all scripts in order | |
-| `code/00_dv_rate.do` | Oblast-level DV incidence rate (treatment intensity) from official statistics | Figure 3 |
-| `code/01_cleaning.do` | Cleans the raw LiK individual and household files for each wave | |
-| `code/02_merge.do` | Builds the 2016–2019 individual panel | |
-| `code/03_main_analysis.do` | Analysis variables; main DDD estimates with wild cluster bootstrap p-values; gender-specific effects; full-sample attitudes | Tables 1–5; appendix tables on gender-specific effects and full-sample attitudes |
-| `code/04_heterogeneity.do` | Employment history from the 12-month activity calendar; heterogeneity; multiple hypothesis testing | Tables 6–8; Appendix Tables 10–13 |
-| `code/05_pretrend.do` | Placebo test using the 2013–2016 panel | Appendix Table 9 |
+- `00_dv_rate.do`: DV incidence rate by oblast (Figure 3)
+- `01_cleaning.do`: cleans the raw LiK files
+- `02_merge.do`: builds the 2016–2019 panel
+- `03_main_analysis.do`: Tables 1–5 and the appendix tables on gender-specific effects and the full sample
+- `04_heterogeneity.do`: Tables 6–8 and Appendix Tables 10–13
+- `05_pretrend.do`: pre-trend test (Appendix Table 9)

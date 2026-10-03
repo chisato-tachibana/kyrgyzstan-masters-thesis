@@ -1,36 +1,16 @@
 # Data
 
-This project uses the **Life in Kyrgyzstan (LiK) Study** panel survey
-(waves 2013, 2016, and 2019). The data are **not included** in this
-repository because redistribution is not permitted.
-
-The data can be obtained free of charge for research purposes from the
-International Data Service Center (IDSC) of IZA:
-<https://datasets.iza.org/dataset/124/life-in-kyrgyzstan-study-2010-2019>
-
-After downloading, place the Stata files in this folder as follows:
+The LiK data (2013, 2016, 2019 waves) are not included. After downloading them from IZA, put the Stata files here like this:
 
 ```
 data/
-├── Version 2022/
-│   ├── Individual/     (2019 individual files: id2, id3, id5, ...)
-│   ├── Household/      (2019 household files: hh0, hh1a, hh4a, hh4b, ...)
-│   └── Panelroster/    (mroster1019_short.dta)
-├── LiK16_IDSC-IZA/LiK16_data_stata/
-│   ├── Individual/     (2016 individual files)
-│   └── Household/      (2016 household files)
-└── stata/data2013/
-    ├── individual/     (2013 individual files)
-    └── household/      (2013 household files)
+  Version 2022/Individual/            2019 individual files
+  Version 2022/Household/             2019 household files
+  Version 2022/Panelroster/           mroster1019_short.dta
+  LiK16_IDSC-IZA/LiK16_data_stata/    2016 files (Individual/, Household/)
+  stata/data2013/                     2013 files (individual/, household/)
 ```
 
-## DV statistics (included)
+This is the folder structure you get when you unzip the files from IZA. Use the files as downloaded.
 
-`data/dv/` contains public statistics from the National Statistical Committee
-of the Kyrgyz Republic, used to build the treatment intensity in
-`code/00_dv_rate.do`:
-
-- `dv_female_victims.csv` — number of female victims of domestic violence by oblast, 2009–2023
-- `population_thousands.csv` — resident population by oblast (thousands), 2012–2024
-
-`oblast` codes follow LiK (SOATO 417xx → xx); `0` is the national total.
+`dv/` has the number of female DV victims by oblast (2009–2023) and the population by oblast in thousands (2012–2024), from the National Statistical Committee of the Kyrgyz Republic. The oblast codes are the same as in LiK, and 0 is the national total.
