@@ -237,8 +237,8 @@ tab check_main_type, missing
 * --- Rescaled treatment -------------------------------------------------------
 * DV_rate_16 is in percent (see 00_dv_rate.do), so one unit of the rescaled
 * variable corresponds to 0.1 percentage points of the DV incidence rate.
-gen DV_rate_16_c_10pp = DV_rate_16_c / 0.10
-label var DV_rate_16_c_10pp "DV rate in 2016, centered, per 0.1 percentage points"
+gen DV_rate_16_cs = DV_rate_16_c / 0.10
+label var DV_rate_16_cs "DV rate in 2016, centered, per 0.1 percentage points"
 
 save "$temporary/analysis_2y_long_DDD_2_12m.dta", replace
 
@@ -276,7 +276,7 @@ program define ddd_employment
     * DDD for each employment outcome on the data in memory, without (nc#)
     * and with (c#) baseline controls; reports the DDD coefficient only.
     syntax, Outcomes(string) Controls(string)
-    local dddcoef 1.post_year#1.female#c.DV_rate_16_c_10pp
+    local dddcoef 1.post_year#1.female#c.DV_rate_16_cs
     local notes addnotes("Wild bootstrap p-values in parentheses. Wild bootstrap uses Webb weights. Stars based on wild bootstrap p-values." "Individual FE absorbed; SEs clustered at oblast." "DV rate is scaled so one unit equals 0.1 percentage points.")
     local tabopts keep(`dddcoef') cells(b(fmt(3) star pvalue(bootp)) bootp(par fmt(3))) stats(controls clusters reps, labels("Controls" "Clusters" "Reps")) starlevels(* 0.10 ** 0.05 *** 0.01) `notes' varwidth(35)
 
@@ -285,15 +285,15 @@ program define ddd_employment
     local nc_list
     local c_list
     foreach y of local outcomes {
-        eststo nc`i': xtreg `y' i.post_year##c.DV_rate_16_c_10pp##i.female if act_nonmiss > 0, fe vce(cluster oblast)
+        eststo nc`i': xtreg `y' i.post_year##c.DV_rate_16_cs##i.female if act_nonmiss > 0, fe vce(cluster oblast)
         ddd_boot nc`i', term(`dddcoef') controls("")
         local nc_list `nc_list' nc`i'
         local ++i
     }
     local i = 1
     foreach y of local outcomes {
-        eststo c`i': xtreg `y' i.post_year##c.DV_rate_16_c_10pp##i.female `controls' if act_nonmiss > 0, fe vce(cluster oblast)
-        ddd_boot c`i', dvvar(DV_rate_16_c_10pp) controls("Yes")
+        eststo c`i': xtreg `y' i.post_year##c.DV_rate_16_cs##i.female `controls' if act_nonmiss > 0, fe vce(cluster oblast)
+        ddd_boot c`i', dvvar(DV_rate_16_cs) controls("Yes")
         local c_list `c_list' c`i'
         local ++i
     }
@@ -372,12 +372,12 @@ local note_residence16  "Coefficient is the additional DDD effect for urban indi
 
 eststo clear
 foreach het in married2016b young40_16 residence16 {
-    local qcoef 1.post_year#1.female#1.`het'#c.DV_rate_16_c_10pp
+    local qcoef 1.post_year#1.female#1.`het'#c.DV_rate_16_cs
     local p `pre_`het''
     local i = 1
     local q_list
     foreach y of local outcomes {
-        eststo `p'_nc`i': xtreg `y' i.post_year##c.DV_rate_16_c_10pp##i.female##i.`het' if act_nonmiss > 0, fe vce(cluster oblast)
+        eststo `p'_nc`i': xtreg `y' i.post_year##c.DV_rate_16_cs##i.female##i.`het' if act_nonmiss > 0, fe vce(cluster oblast)
         ddd_boot `p'_nc`i', term(`qcoef') controls("")
         local q_list `q_list' `p'_nc`i'
         local ++i
@@ -441,11 +441,11 @@ foreach f in A B C {
     postfile `mhtpost' str40 Outcome double Wild_p using `mht_raw', replace
 
     foreach y of local family_`f' {
-        quietly xtreg `y' i.post_year##c.DV_rate_16_c_10pp##i.female if act_nonmiss > 0, fe vce(cluster oblast)
+        quietly xtreg `y' i.post_year##c.DV_rate_16_cs##i.female if act_nonmiss > 0, fe vce(cluster oblast)
         local coefname : colfullnames e(b)
         local dddname
         foreach v of local coefname {
-            if strpos("`v'", "1.post_year") & strpos("`v'", "1.female") & strpos("`v'", "DV_rate_16_c_10pp") {
+            if strpos("`v'", "1.post_year") & strpos("`v'", "1.female") & strpos("`v'", "DV_rate_16_cs") {
                 local dddname `v'
             }
         }

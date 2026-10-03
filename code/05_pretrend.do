@@ -315,6 +315,8 @@ label var log_cons_nonfood_13b "Log non-food cons. (2013 baseline)"
 * Mean-center the DV rate
 summarize DV_rate_13
 gen double DV_rate_13_c = DV_rate_13 - r(mean)
+* Rescaled so that one unit equals 0.1 percentage points (as in 03 and 04)
+gen double DV_rate_13_cs = DV_rate_13_c / 0.10
 
 gen flfp = work7 if female==1
 label var flfp "Female Labor Force Participation (female sample only)"
@@ -369,17 +371,17 @@ program define wb_bootp
     estadd scalar reps = e(N_wbreps) : `name'
 end
 
-local m1 No_WWOH_reli i.post_year##c.DV_rate_13_c##i.female i.year if nowwoh413==1
-local m2 Huscareer_imp_wife i.post_year##c.DV_rate_13_c##i.female i.year if hus413==1
-local m3 risk_std i.post_year##c.DV_rate_13_c##i.female i.year
-local m4 fem_dm_ave post_year i.post_year##c.DV_rate_13_c##i.female i.year
-local m5 work7 i.post_year##c.DV_rate_13_c##i.female i.year
+local m1 No_WWOH_reli i.post_year##c.DV_rate_13_cs##i.female i.year if nowwoh413==1
+local m2 Huscareer_imp_wife i.post_year##c.DV_rate_13_cs##i.female i.year if hus413==1
+local m3 risk_std i.post_year##c.DV_rate_13_cs##i.female i.year
+local m4 fem_dm_ave post_year i.post_year##c.DV_rate_13_cs##i.female i.year
+local m5 work7 i.post_year##c.DV_rate_13_cs##i.female i.year
 
 forvalues k = 1/5 {
     eststo m`k': wildboot xtreg `m`k'', fe cluster(oblast) reps(9999) rseed(1234)
     wb_bootp m`k'
 }
 
-esttab m1 m2 m3 m4 m5, keep(1.post_year 1.post_year#c.DV_rate_13_c 1.post_year#1.female 1.post_year#1.female#c.DV_rate_13_c) scalars(clusters reps) cells(b(fmt(3) star pvalue(bootp)) bootp(par)) starlevels(* 0.10 ** 0.05 *** 0.01) addnotes("Wild cluster boot p-values in parentheses. Stars based on p-values." "Individual FE absorbed (idpp, year); SEs clustered at oblast.") varwidth(30)
+esttab m1 m2 m3 m4 m5, keep(1.post_year 1.post_year#c.DV_rate_13_cs 1.post_year#1.female 1.post_year#1.female#c.DV_rate_13_cs) scalars(clusters reps) cells(b(fmt(3) star pvalue(bootp)) bootp(par)) starlevels(* 0.10 ** 0.05 *** 0.01) addnotes("Wild cluster boot p-values in parentheses. Stars based on p-values." "Individual FE absorbed (idpp, year); SEs clustered at oblast.") varwidth(30)
 
 save "$temporary/analysis_pre2y_long_DDD_fin.dta", replace

@@ -245,7 +245,7 @@ end
 capture program drop boot_main
 program define boot_main
     * Wild bootstrap tests for the four DDD terms
-    foreach t in 1.post_year 1.post_year#c.DV_rate_16_c 1.post_year#1.female 1.post_year#c.DV_rate_16_c#1.female {
+    foreach t in 1.post_year 1.post_year#c.DV_rate_16_cs 1.post_year#1.female 1.post_year#c.DV_rate_16_cs#1.female {
         boottest `t', cluster(oblast) reps(9999) seed(12345) weight(webb)
     }
 end
@@ -283,7 +283,12 @@ program define wb_bootp
 end
 
 * --- Specification ------------------------------------------------------------
-local ddd c.DV_rate_16_c##i.female##i.post_year i.year
+* DV rate rescaled so that one unit equals 0.1 percentage points, roughly one
+* standard deviation across oblasts (0.099 percentage points)
+gen double DV_rate_16_cs = DV_rate_16_c / 0.10
+label var DV_rate_16_cs "DV rate in 2016, centered, per 0.1 percentage points"
+
+local ddd c.DV_rate_16_cs##i.female##i.post_year i.year
 
 * Baseline controls interacted with the period (factor-variable form)
 local bl_ctrl      i.post_year#c.(num_child_16b age_16b age2_16b log_cons_food_16b log_cons_nonfood_16b)
@@ -301,7 +306,7 @@ foreach v in num_child_16b age_16b age2_16b log_cons_food_16b log_cons_nonfood_1
 }
 
 * DDD coefficient names as stored in e(b)
-local main_terms 1.post_year 1.post_year#c.DV_rate_16_c 1.female#1.post_year 1.female#1.post_year#c.DV_rate_16_c
+local main_terms 1.post_year 1.post_year#c.DV_rate_16_cs 1.female#1.post_year 1.female#1.post_year#c.DV_rate_16_cs
 
 * Outcomes and estimation samples. Gender-attitude models are restricted to
 * respondents who strongly agreed (= 4) with the statement in 2016.
@@ -318,14 +323,14 @@ local s_fem_dm       ""
 
 
 * --- 7.1 Individual and year FE both absorbed ---------------------------------
-reghdfe work7 c.DV_rate_16_c##i.female##i.post_year `bl_ctrl' `bl_ctrl_m', absorb(idpp year) vce(cluster oblast)
+reghdfe work7 c.DV_rate_16_cs##i.female##i.post_year `bl_ctrl' `bl_ctrl_m', absorb(idpp year) vce(cluster oblast)
 * FLFP with urban x post control
-reghdfe work7 c.DV_rate_16_c##i.female##i.post_year `bl_ctrl' `bl_ctrl_m' `bl_ctrl_city', absorb(idpp year) vce(cluster oblast)
+reghdfe work7 c.DV_rate_16_cs##i.female##i.post_year `bl_ctrl' `bl_ctrl_m' `bl_ctrl_city', absorb(idpp year) vce(cluster oblast)
 eststo FLFP_2fe
 estadd scalar clusters = e(N_clust)
 
 foreach o in No_WWOH_reli Hus risk fem_dm {
-    reghdfe `y_`o'' c.DV_rate_16_c##i.female##i.post_year `bl_ctrl' `bl_ctrl_m' `s_`o'', absorb(idpp year) vce(cluster oblast)
+    reghdfe `y_`o'' c.DV_rate_16_cs##i.female##i.post_year `bl_ctrl' `bl_ctrl_m' `s_`o'', absorb(idpp year) vce(cluster oblast)
     eststo `o'_2fe
     estadd scalar clusters = e(N_clust)
 }
@@ -350,7 +355,7 @@ esttab No_WWOH_reli_nc Hus_nc FLFP_nc risk_nc fem_dm_nc, keep(`main_terms') scal
 
 
 * --- 7.3 Paper Tables 3-5 (wild bootstrap p-values) ----------------------------
-local labels 1.post_year "Post (2019 = 1)" 1.post_year#c.DV_rate_16_c "Post $\times$ DV rate" 1.female#1.post_year "Post $\times$ Female" 1.female#1.post_year#c.DV_rate_16_c "Post $\times$ DV rate $\times$ Female (DDD)" pre_num_child_16b "Num children (baseline) $\times$ Pre" pre_age_16b "Age (baseline) $\times$ Pre" pre_age2_16b "Age$^2$ (baseline) $\times$ Pre" pre_log_cons_food_16b "Log food cons. (baseline) $\times$ Pre" pre_log_cons_nonfood_16b "Log non-food cons. (baseline) $\times$ Pre" pre_married2016b "Married (baseline) $\times$ Pre"
+local labels 1.post_year "Post (2019 = 1)" 1.post_year#c.DV_rate_16_cs "Post $\times$ DV rate" 1.female#1.post_year "Post $\times$ Female" 1.female#1.post_year#c.DV_rate_16_cs "Post $\times$ DV rate $\times$ Female (DDD)" pre_num_child_16b "Num children (baseline) $\times$ Pre" pre_age_16b "Age (baseline) $\times$ Pre" pre_age2_16b "Age$^2$ (baseline) $\times$ Pre" pre_log_cons_food_16b "Log food cons. (baseline) $\times$ Pre" pre_log_cons_nonfood_16b "Log non-food cons. (baseline) $\times$ Pre" pre_married2016b "Married (baseline) $\times$ Pre"
 
 local tabopts keep(`main_terms' `ctrl_terms') order(`main_terms' `ctrl_terms') cells(b(fmt(3) star pvalue(wildp)) wildp(fmt(3) par)) starlevels(* 0.10 ** 0.05 *** 0.01) coeflabels(`labels') stats(N clusters reps, labels("Observations" "Clusters" "Replications") fmt(0 0 0)) booktabs collabels(none) nonotes replace
 
@@ -372,8 +377,8 @@ esttab No_WWOH_reli_nc No_WWOH_reli Hus_nc Hus risk_nc risk fem_dm_nc fem_dm FLF
 * difference postdv_w - postdv_m equals the DDD coefficient.
 gen post_m   = post_year * (1 - female)
 gen post_w   = post_year * female
-gen postdv_m = post_year * DV_rate_16_c * (1 - female)
-gen postdv_w = post_year * DV_rate_16_c * female
+gen postdv_m = post_year * DV_rate_16_cs * (1 - female)
+gen postdv_w = post_year * DV_rate_16_cs * female
 label var post_m   "Post (men)"
 label var post_w   "Post (women)"
 label var postdv_m "Post $\times$ DV rate (men)"
@@ -429,12 +434,12 @@ foreach a in c v {
     preserve
     keep if residence16 == `r_`a''
 
-    reghdfe work7 c.DV_rate_16_c##i.female##i.post_year i.year, absorb(idpp) vce(cluster oblast)
+    reghdfe work7 c.DV_rate_16_cs##i.female##i.post_year i.year, absorb(idpp) vce(cluster oblast)
     boot_main
     eststo FLFP_`a'
     estadd scalar clusters = e(N_clust)
 
-    reghdfe work7 c.DV_rate_16_c##i.female##i.post_year `bl_ctrl' `bl_ctrl_m' i.year, absorb(idpp) vce(cluster oblast)
+    reghdfe work7 c.DV_rate_16_cs##i.female##i.post_year `bl_ctrl' `bl_ctrl_m' i.year, absorb(idpp) vce(cluster oblast)
     boot_main
     boot_ctrl
     eststo FLFP_`a'c
@@ -449,13 +454,13 @@ esttab FLFP_c FLFP_cc FLFP_v FLFP_vc, keep(`main_terms') scalars(clusters) cells
 preserve
 keep if residence16 == 1
 
-reghdfe No_WWOH_reli c.DV_rate_16_c##i.female##i.post_year i.year, absorb(idpp) vce(cluster oblast)
+reghdfe No_WWOH_reli c.DV_rate_16_cs##i.female##i.post_year i.year, absorb(idpp) vce(cluster oblast)
 boot_main
 eststo No_WWOH_reli_c
 estadd scalar clusters = e(N_clust)
 
 foreach o in Hus risk fem_dm {
-    reghdfe `y_`o'' c.DV_rate_16_c##i.female##i.post_year `bl_ctrl' `bl_ctrl_m' i.year `s_`o'', absorb(idpp) vce(cluster oblast)
+    reghdfe `y_`o'' c.DV_rate_16_cs##i.female##i.post_year `bl_ctrl' `bl_ctrl_m' i.year `s_`o'', absorb(idpp) vce(cluster oblast)
     eststo `o'_c
     estadd scalar clusters = e(N_clust)
 }
@@ -470,29 +475,29 @@ restore
 *******************************************************************************
 
 * --- 9.1 DDD without controls: m1-m5 ------------------------------------------
-local m1 No_WWOH_reli i.post_year##c.DV_rate_16_c##i.female i.year if nowwoh416==1
-local m2 Huscareer_imp_wife i.post_year##c.DV_rate_16_c##i.female i.year if hus416==1
-local m3 risk_std i.post_year##c.DV_rate_16_c##i.female i.year
-local m4 fem_dm_ave post_year i.post_year##c.DV_rate_16_c##i.female i.year
-local m5 work7 i.post_year##c.DV_rate_16_c##i.female i.year
+local m1 No_WWOH_reli i.post_year##c.DV_rate_16_cs##i.female i.year if nowwoh416==1
+local m2 Huscareer_imp_wife i.post_year##c.DV_rate_16_cs##i.female i.year if hus416==1
+local m3 risk_std i.post_year##c.DV_rate_16_cs##i.female i.year
+local m4 fem_dm_ave post_year i.post_year##c.DV_rate_16_cs##i.female i.year
+local m5 work7 i.post_year##c.DV_rate_16_cs##i.female i.year
 
 forvalues k = 1/5 {
     eststo m`k': wildboot xtreg `m`k'', fe cluster(oblast) reps(9999) rseed(1234)
     wb_bootp m`k'
 }
 
-esttab m1 m2 m3 m4 m5, keep(1.post_year 1.post_year#c.DV_rate_16_c 1.post_year#1.female 1.post_year#1.female#c.DV_rate_16_c) scalars(clusters reps) cells(b(fmt(3) star pvalue(bootp)) bootp(par)) starlevels(* 0.10 ** 0.05 *** 0.01) addnotes("p-values in parentheses. Stars based on p-values." "Individual FE absorbed (idpp, year); SEs clustered at oblast.") varwidth(30)
+esttab m1 m2 m3 m4 m5, keep(1.post_year 1.post_year#c.DV_rate_16_cs 1.post_year#1.female 1.post_year#1.female#c.DV_rate_16_cs) scalars(clusters reps) cells(b(fmt(3) star pvalue(bootp)) bootp(par)) starlevels(* 0.10 ** 0.05 *** 0.01) addnotes("p-values in parentheses. Stars based on p-values." "Individual FE absorbed (idpp, year); SEs clustered at oblast.") varwidth(30)
 
 * --- 9.2 Robustness: quadruple interaction with urban residence, rm1-rm5 -------
-local rm1 No_WWOH_reli i.post_year##c.DV_rate_16_c##i.female##i.residence16 i.year if nowwoh416==1
-local rm2 Huscareer_imp_wife i.post_year##c.DV_rate_16_c##i.female##i.residence16 if hus416==1
-local rm3 risk_std i.post_year##c.DV_rate_16_c##i.female##i.residence16
-local rm4 fem_dm_ave post_year i.post_year##c.DV_rate_16_c##i.female##i.residence16 i.year
-local rm5 work7 i.post_year##c.DV_rate_16_c##i.female##i.residence16 i.year
+local rm1 No_WWOH_reli i.post_year##c.DV_rate_16_cs##i.female##i.residence16 i.year if nowwoh416==1
+local rm2 Huscareer_imp_wife i.post_year##c.DV_rate_16_cs##i.female##i.residence16 if hus416==1
+local rm3 risk_std i.post_year##c.DV_rate_16_cs##i.female##i.residence16
+local rm4 fem_dm_ave post_year i.post_year##c.DV_rate_16_cs##i.female##i.residence16 i.year
+local rm5 work7 i.post_year##c.DV_rate_16_cs##i.female##i.residence16 i.year
 
 forvalues k = 1/5 {
     eststo rm`k': wildboot xtreg `rm`k'', fe cluster(oblast) reps(9999) rseed(1234)
     wb_bootp rm`k'
 }
 
-esttab rm1 rm2 rm3 rm4 rm5, keep(1.post_year 1.post_year#c.DV_rate_16_c 1.post_year#1.female 1.post_year#1.female#c.DV_rate_16_c 1.post_year#1.residence16 1.post_year#1.residence16#c.DV_rate_16_c 1.post_year#1.female#1.residence16 1.post_year#1.female#1.residence16#c.DV_rate_16_c) scalars(clusters reps) cells(b(fmt(3) star pvalue(bootp)) bootp(par)) starlevels(* 0.10 ** 0.05 *** 0.01) addnotes("p-values in parentheses. Stars based on p-values." "Individual FE absorbed (idpp, year); SEs clustered at oblast.") varwidth(30)
+esttab rm1 rm2 rm3 rm4 rm5, keep(1.post_year 1.post_year#c.DV_rate_16_cs 1.post_year#1.female 1.post_year#1.female#c.DV_rate_16_cs 1.post_year#1.residence16 1.post_year#1.residence16#c.DV_rate_16_cs 1.post_year#1.female#1.residence16 1.post_year#1.female#1.residence16#c.DV_rate_16_cs) scalars(clusters reps) cells(b(fmt(3) star pvalue(bootp)) bootp(par)) starlevels(* 0.10 ** 0.05 *** 0.01) addnotes("p-values in parentheses. Stars based on p-values." "Individual FE absorbed (idpp, year); SEs clustered at oblast.") varwidth(30)
