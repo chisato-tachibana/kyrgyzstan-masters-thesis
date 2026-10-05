@@ -41,9 +41,9 @@ capture mkdir "$fig"
 * ssc install boottest
 
 * ---- Run --------------------------------------------------------------------
-do "code/00_dv_rate.do"
-do "code/01_cleaning.do"
-do "code/02_merge.do"
-do "code/03_main_analysis.do"
-do "code/04_heterogeneity.do"
-do "code/05_pretrend.do"
+do "$root/code/00_dv_rate.do"
+do "$root/code/01_cleaning.do"
+do "$root/code/02_merge.do"
+do "$root/code/03_main_analysis.do"
+do "$root/code/04_heterogeneity.do"
+do "$root/code/05_pretrend.do"
